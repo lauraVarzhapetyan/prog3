@@ -1,15 +1,9 @@
-//խոտի կլասը
-class Grass {
-    constructor(x, y) {
+class LivingCreature {
+    constructor(x, y, index) {
         this.x = x;
         this.y = y;
-        // this.energy = 5;
-        this.multiply = 0; //բազմացման գործակից
-        this.directions = [];
-
-    }
-    //շրջապատի հետազոտության մատրիցը
-    newDirections() {
+        this.multiply = 0;
+        this.index = index;
         this.directions = [
             [this.x - 1, this.y - 1],
             [this.x, this.y - 1],
@@ -21,58 +15,40 @@ class Grass {
             [this.x + 1, this.y + 1]
         ];
     }
-
-    //հետազոտում է շրջապատը, որոնում է հետաքրքրող կերպարներին
-    //կերպարը որոշվում է t արգումենտով
-    getDirections(t) {
-        this.newDirections();
+    chooseCell(ch) {
         var found = [];
         for (var i in this.directions) {
             var x = this.directions[i][0];
             var y = this.directions[i][1];
             if (x >= 0 && x < matrix[0].length && y >= 0 && y < matrix.length) {
-                if (matrix[y][x] == t) {
+                if (matrix[y][x] == ch) {
                     found.push(this.directions[i]);
                 }
             }
         }
         return found;
     }
+}
 
-    //mul() Բազմացում
+class Grass extends LivingCreature {
     mul() {
         this.multiply++;
-        if (this.multiply == 8) {
-            //Հետազոտում է շրջապատը, որոնում դատարկ տարածքներ
-            var fundCords = this.getDirections(0);
-            var cord = random(fundCords);
-            if (cord) {
-                var x = cord[0];
-                var y = cord[1];
-
-                //Ավելացնում է նոր խոտ խոտերի զանգվածում
-                var norXot = new Grass(x, y);
-                xotArr.push(norXot);
-
-                //Ավելացնում է նոր խոտի մասին գրառում հիմնական matrix-ում 
-                matrix[y][x] = 1;
-                this.multiply = 0;
-            }
+        var newCell = random(this.chooseCell(0));
+        if (this.multiply >= 8 && newCell) {
+            var newGrass = new Grass(newCell[0], newCell[1], this.index);
+            grassArr.push(newGrass);
+            matrix[newCell[1]][newCell[0]] = this.index;
+            this.multiply = 0;
         }
     }
 }
 //խոտակերի կլասը
-class Eatgrass {
-    constructor(x, y) {
-        this.x = x;
-        this.y = y;
-        this.multiply = 0;
-        this.energy = 100;
-        this.directions =[];
+class GrassEater extends LivingCreature {
+    constructor(x, y, index) {
+        super(x, y, index);
+        this.energy = 8;
     }
-
-    //շրջապատի հետազոտության մատրիցը
-    newDirections() {
+    getNewCoordinates() {
         this.directions = [
             [this.x - 1, this.y - 1],
             [this.x, this.y - 1],
@@ -84,27 +60,10 @@ class Eatgrass {
             [this.x + 1, this.y + 1]
         ];
     }
-
-    //հետազոտում է շրջապատը, որոնում է հետաքրքրող կերպարներին
-    //կերպարը որոշվում է t արգումենտով
-    getDirections(t) {
-        this.newDirections();
-        var found = [];
-        for (var i in this.directions) {
-            var x = this.directions[i][0];
-            var y = this.directions[i][1];
-            if (x >= 0 && x < matrix[0].length && y >= 0 && y < matrix.length) {
-                if (matrix[y][x] == t) {
-                    found.push(this.directions[i]);
-                }
-            }
-        }
-        return found;
+    chooseCell(character) {
+        this.getNewCoordinates();
+        return super.chooseCell(character);
     }
-
-
-
-    //move() շարժվել
     move() {
         //որոնում է դատարկ տարածքներ
         var fundCords = this.getDirections(0);
@@ -123,9 +82,6 @@ class Eatgrass {
             this.y = y;
         }
     }
-
-
-    //eat()-ուտել
     eat() {
         //հետազոտում է շրջակայքը, որոնում է սնունդ
         var fundCords = this.getDirections(1);
@@ -147,7 +103,7 @@ class Eatgrass {
 
             //բազմացման գործակիցը մեծացնում է
             this.multiply++;
- 
+
             //մեծացնում է էներգիան
             this.energy++;
 
@@ -175,15 +131,13 @@ class Eatgrass {
             }
         }
     }
-
-    //mul() բազմանալ
     mul() {
         //փնտրում է դատարկ տարածք
         var fundCords = this.getDirections(0);
         var cord = random(fundCords);
 
         //եթե կա բազմանում է
-        if (cord){
+        if (cord) {
             var x = cord[0];
             var y = cord[1];
             // this.multiply++;
@@ -195,10 +149,8 @@ class Eatgrass {
             //հիմնական matrix-ում կատարում է գրառում նոր խոտի մասին
             matrix[y][x] = 2;
             // this.multiply = 0; //????????
-        } 
+        }
     }
-
-    //die() մահանալ
     die() {
         //Հիմնական մատրիցում իր դիրքում դնում է դատարկություն
         matrix[this.y][this.x] = 0;
@@ -210,7 +162,6 @@ class Eatgrass {
             }
         }
     }
-
 }
 class Gishatich {
     constructor(x, y) {
@@ -218,7 +169,7 @@ class Gishatich {
         this.y = y;
         this.multiply = 0;
         this.energy = 30;
-        this.directions =[];
+        this.directions = [];
     }
 
     //շրջապատի հետազոտության մատրիցը
@@ -317,7 +268,7 @@ class Gishatich {
         var cord = random(fundCords);
 
         //եթե կա բազմանում է
-        if (cord){
+        if (cord) {
             var x = cord[0];
             var y = cord[1];
             // this.multiply++;
@@ -329,7 +280,7 @@ class Gishatich {
             //հիմնական matrix-ում կատարում է գրառում նոր խոտի մասին
             matrix[y][x] = 3;
             // this.multiply = 0; //????????
-        } 
+        }
     }
 
     //die() մահանալ
@@ -352,22 +303,20 @@ class Taguhi {
         this.x = x;
         this.y = y;
         this.energy = 30;
-        this.directions =[];
-        for(var l=0; l<matrix.length; l++)
-        {
-            var zangvac=[];
-            var newX=l;
-            var newY=y;
+        this.directions = [];
+        for (var l = 0; l < matrix.length; l++) {
+            var zangvac = [];
+            var newX = l;
+            var newY = y;
             zangvac.push(newX);
             zangvac.push(newY);
             this.directions.push(zangvac);
         }
     }
-newDirections() 
-{
+    newDirections() {
         this.directions;
     }
- getDirections(t) {
+    getDirections(t) {
         this.newDirections();
         var found = [];
         for (var i in this.directions) {
@@ -382,9 +331,8 @@ newDirections()
         return found;
     }
 
-move() 
-{
-    var fundCords = this.getDirections(0);
+    move() {
+        var fundCords = this.getDirections(0);
         var cord = random(fundCords);
 
         if (cord) {
@@ -399,10 +347,9 @@ move()
             this.x = x;
             this.y = y;
         }
-}
-eat()
-{
-    var fundCords = this.getDirections(2);
+    }
+    eat() {
+        var fundCords = this.getDirections(2);
         var cord = random(fundCords);
         if (cord) {
             var x = cord[0];
@@ -411,7 +358,7 @@ eat()
             matrix[this.y][this.x] = 0;
             this.x = x;
             this.y = y;
-            this.energy=this.energy+2;
+            this.energy = this.energy + 2;
             for (var i in eatArr) {
                 if (x == eatArr[i].x && y == eatArr[i].y) {
                     eatArr.splice(i, 1);
@@ -420,49 +367,49 @@ eat()
 
 
         } else {
-        //հետազոտում է շրջակայքը, որոնում է սնունդ
-        var fundCords = this.getDirections(1);
-        var cord = random(fundCords);
+            //հետազոտում է շրջակայքը, որոնում է սնունդ
+            var fundCords = this.getDirections(1);
+            var cord = random(fundCords);
 
-        //եթե կա հարմար սնունդ
-        if (cord) {
-            var x = cord[0];
-            var y = cord[1];
+            //եթե կա հարմար սնունդ
+            if (cord) {
+                var x = cord[0];
+                var y = cord[1];
 
-            //հիմնական մատրիցայում տեղափոխվում է կերած սննդի տեղը
-            //իր հին տեղը դնում է դատարկ վանդակ
-            matrix[y][x] = 4;
-            matrix[this.y][this.x] = 0;
+                //հիմնական մատրիցայում տեղափոխվում է կերած սննդի տեղը
+                //իր հին տեղը դնում է դատարկ վանդակ
+                matrix[y][x] = 4;
+                matrix[this.y][this.x] = 0;
 
-            //փոխում է սեփական կորդինատները օբյեկտի մեջ
-            this.x = x;
-            this.y = y;
- 
-            //մեծացնում է էներգիան
-            this.energy++;
+                //փոխում է սեփական կորդինատները օբյեկտի մեջ
+                this.x = x;
+                this.y = y;
 
-            //!!! ԿԱՐԵՎՈՐ !!! սննդի զանգվածից ջնջում է կերված սնունդը
-            //խոտակերի համար դա խոտն է, խոտերի զանգվածի մեջ xotArr
-            for (var i in xotArr) {
-                if (x == xotArr[i].x && y == xotArr[i].y) {
-                    xotArr.splice(i, 1);
+                //մեծացնում է էներգիան
+                this.energy++;
+
+                //!!! ԿԱՐԵՎՈՐ !!! սննդի զանգվածից ջնջում է կերված սնունդը
+                //խոտակերի համար դա խոտն է, խոտերի զանգվածի մեջ xotArr
+                for (var i in xotArr) {
+                    if (x == xotArr[i].x && y == xotArr[i].y) {
+                        xotArr.splice(i, 1);
+                    }
+                }
+
+                //եթե պատրաստ է բազմացմանը, բազմանում է 
+
+
+            } else {
+                //եթե չկա հարմար սնունդ 
+                this.move();
+                this.energy--;
+                if (this.energy <= 0) { //մահանում է, եթե էներգիան 3֊ից ցածր է
+                    this.die();
                 }
             }
-
-            //եթե պատրաստ է բազմացմանը, բազմանում է 
-
-
-        } else {
-            //եթե չկա հարմար սնունդ 
-            this.move();
-            this.energy--;
-            if (this.energy <= 0) { //մահանում է, եթե էներգիան 3֊ից ցածր է
-                this.die();
-            }
         }
-        }
-}
-die() {
+    }
+    die() {
         //Հիմնական մատրիցում իր դիրքում դնում է դատարկություն
         matrix[this.y][this.x] = 0;
 
@@ -474,25 +421,21 @@ die() {
         }
     }
 }
-class Mat
-{
-    constructor(x,y)
-    {
-        this.x=x;
-        this.y=y;
-        this.energy=30;
-        this.directions=[];
-        this.multiply=0;
-        for(var k=0; k<matrix.length; k++)
-        {
-            if((x+k)<=matrix[k].length && (y+k)<=matrix.length)
-            {
-                var zangvac1=[];
-                var zangvac2=[];
-                var newx1=x-k;
-                var newx2=x+k;
-                var newy1=y-k;
-                var newy2=y+k;
+class Mat {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.energy = 30;
+        this.directions = [];
+        this.multiply = 0;
+        for (var k = 0; k < matrix.length; k++) {
+            if ((x + k) <= matrix[k].length && (y + k) <= matrix.length) {
+                var zangvac1 = [];
+                var zangvac2 = [];
+                var newx1 = x - k;
+                var newx2 = x + k;
+                var newy1 = y - k;
+                var newy2 = y + k;
                 zangvac1.push(newx1);
                 zangvac2.push(newx2);
                 zangvac1.push(newy1);
@@ -503,11 +446,10 @@ class Mat
         }
         console.log(this.directions);
     }
-    newDirections() 
-    {
+    newDirections() {
         this.directions;
     }
-getDirections(t) {
+    getDirections(t) {
         this.newDirections();
         var found = [];
         for (var i in this.directions) {
@@ -587,7 +529,7 @@ getDirections(t) {
         var cord = random(fundCords);
 
         //եթե կա բազմանում է
-        if (cord){
+        if (cord) {
             var x = cord[0];
             var y = cord[1];
             // this.multiply++;
@@ -599,7 +541,7 @@ getDirections(t) {
             //հիմնական matrix-ում կատարում է գրառում նոր խոտի մասին
             matrix[y][x] = 5;
             // this.multiply = 0; //????????
-        } 
+        }
     }
 
     //die() մահանալ
