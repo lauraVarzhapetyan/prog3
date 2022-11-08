@@ -1,5 +1,5 @@
 var side = 5;
-var xotArr = []; //խոտերի զանգված
+var grassArr = []; //խոտերի զանգված
 var eatArr = []; //խոտակերների զանգված
 var gishatichArr=[];
 var taguhiArr=[];
@@ -27,11 +27,11 @@ function setup() {
     for (var y = 0; y < matrix.length; y++) {
         for (var x = 0; x < matrix[y].length; x++) {
             if (matrix[y][x] == 2) {
-                var eatgrass = new Eatgrass(x, y);
+                var eatgrass = new GrassEater(x, y);
                 eatArr.push(eatgrass);
             } else if (matrix[y][x] == 1) {
                 var grass = new Grass(x, y);
-                xotArr.push(grass);
+                grassArr.push(grass);
             } else if (matrix[y][x]==3){
                 var gish=new Gishatich(x,y);
                 gishatichArr.push(gish);
@@ -78,8 +78,8 @@ function draw() {
 
 
     //յուրաքանչյուր խոտ փորձում է բազմանալ
-    for (var i in xotArr) {
-        xotArr[i].mul();
+    for (var i in grassArr) {
+        grassArr[i].mul();
     }
 
     //յուրաքանչյուր խոտակեր փորձում է ուտել խոտ

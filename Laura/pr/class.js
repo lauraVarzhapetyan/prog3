@@ -37,12 +37,11 @@ class Grass extends LivingCreature {
         if (this.multiply >= 8 && newCell) {
             var newGrass = new Grass(newCell[0], newCell[1], this.index);
             grassArr.push(newGrass);
-            matrix[newCell[1]][newCell[0]] = this.index;
+            matrix[newCell[1]][newCell[0]] = 1;
             this.multiply = 0;
         }
     }
 }
-//խոտակերի կլասը
 class GrassEater extends LivingCreature {
     constructor(x, y, index) {
         super(x, y, index);
@@ -65,97 +64,69 @@ class GrassEater extends LivingCreature {
         return super.chooseCell(character);
     }
     move() {
-        //որոնում է դատարկ տարածքներ
-        var fundCords = this.getDirections(0);
+        var fundCords = this.chooseCell(0);
         var cord = random(fundCords);
 
         if (cord) {
             var x = cord[0];
             var y = cord[1];
 
-            //կատարում է տեղափոխություն հիմնական matrix-ում 
             matrix[y][x] = 2;
             matrix[this.y][this.x] = 0;
 
-            //թարմացնում է սեփական կորդինատները
             this.x = x;
             this.y = y;
         }
     }
     eat() {
-        //հետազոտում է շրջակայքը, որոնում է սնունդ
-        var fundCords = this.getDirections(1);
+        var fundCords = this.chooseCell(1);
         var cord = random(fundCords);
 
-        //եթե կա հարմար սնունդ
         if (cord) {
             var x = cord[0];
             var y = cord[1];
 
-            //հիմնական մատրիցայում տեղափոխվում է կերած սննդի տեղը
-            //իր հին տեղը դնում է դատարկ վանդակ
             matrix[y][x] = 2;
             matrix[this.y][this.x] = 0;
 
-            //փոխում է սեփական կորդինատները օբյեկտի մեջ
             this.x = x;
             this.y = y;
 
-            //բազմացման գործակիցը մեծացնում է
             this.multiply++;
 
-            //մեծացնում է էներգիան
             this.energy++;
 
-            //!!! ԿԱՐԵՎՈՐ !!! սննդի զանգվածից ջնջում է կերված սնունդը
-            //խոտակերի համար դա խոտն է, խոտերի զանգվածի մեջ xotArr
-            for (var i in xotArr) {
-                if (x == xotArr[i].x && y == xotArr[i].y) {
-                    xotArr.splice(i, 1);
+            for (var i in grassArr) {
+                if (x == grassArr[i].x && y == grassArr[i].y) {
+                    grassArr.splice(i, 1);
                 }
             }
 
-            //եթե պատրաստ է բազմացմանը, բազմանում է 
             if (this.multiply == 10) {
                 this.mul()
                 this.multiply = 0;
             }
 
-
-        } else {
-            //եթե չկա հարմար սնունդ 
+        } else { 
             this.move();
             this.energy--;
-            if (this.energy <= 0) { //մահանում է, եթե էներգիան 3֊ից ցածր է
+            if (this.energy <= 0) { 
                 this.die();
             }
         }
     }
     mul() {
-        //փնտրում է դատարկ տարածք
-        var fundCords = this.getDirections(0);
-        var cord = random(fundCords);
-
-        //եթե կա բազմանում է
-        if (cord) {
-            var x = cord[0];
-            var y = cord[1];
-            // this.multiply++;
-            //ստեղծում է նոր օբյեկտ (այստեղ խոտակեր) 
-            //և տեղադրում է այն խոտակերների զանգվածի մեջ
-            var norXotaker = new Eatgrass(x, y);
-            eatArr.push(norXotaker);
-
-            //հիմնական matrix-ում կատարում է գրառում նոր խոտի մասին
-            matrix[y][x] = 2;
-            // this.multiply = 0; //????????
+        this.multiply++;
+        var newCell = random(this.chooseCell(0));
+        if (this.multiply >= 8 && newCell) {
+            var newEat = new GrassEater(newCell[0], newCell[1], this.index);
+            eatArr.push(newEat);
+            matrix[newCell[1]][newCell[0]] = 2;
+            this.multiply = 0;
         }
     }
     die() {
-        //Հիմնական մատրիցում իր դիրքում դնում է դատարկություն
         matrix[this.y][this.x] = 0;
-
-        //!!! ԿԱՐԵՎՈՐ !!! ջնջում է ինքն իրեն խոտակերների զանգվածից
         for (var i in eatArr) {
             if (this.x == eatArr[i].x && this.y == eatArr[i].y) {
                 eatArr.splice(i, 1);
@@ -163,17 +134,12 @@ class GrassEater extends LivingCreature {
         }
     }
 }
-class Gishatich {
-    constructor(x, y) {
-        this.x = x;
-        this.y = y;
-        this.multiply = 0;
+class Gishatich extends LivingCreature{
+    constructor(x, y, index) {
+        super(x, y, index);
         this.energy = 30;
-        this.directions = [];
     }
-
-    //շրջապատի հետազոտության մատրիցը
-    newDirections() {
+    getNewCoordinates() {
         this.directions = [
             [this.x - 1, this.y - 1],
             [this.x, this.y - 1],
@@ -185,51 +151,27 @@ class Gishatich {
             [this.x + 1, this.y + 1]
         ];
     }
-
-    //հետազոտում է շրջապատը, որոնում է հետաքրքրող կերպարներին
-    //կերպարը որոշվում է t արգումենտով
-    getDirections(t) {
-        this.newDirections();
-        var found = [];
-        for (var i in this.directions) {
-            var x = this.directions[i][0];
-            var y = this.directions[i][1];
-            if (x >= 0 && x < matrix[0].length && y >= 0 && y < matrix.length) {
-                if (matrix[y][x] == t) {
-                    found.push(this.directions[i]);
-                }
-            }
-        }
-        return found;
+    chooseCell(character) {
+        this.getNewCoordinates();
+        return super.chooseCell(character);
     }
-
-
-
-    //move() շարժվել
     move() {
-        //որոնում է դատարկ տարածքներ
-        var fundCords = this.getDirections(0);
+        var fundCords = this.chooseCell(0);
         var cord = random(fundCords);
 
         if (cord) {
             var x = cord[0];
             var y = cord[1];
-
-            //կատարում է տեղափոխություն հիմնական matrix-ում 
+ 
             matrix[y][x] = 3;
             matrix[this.y][this.x] = 0;
 
-            //թարմացնում է սեփական կորդինատները
             this.x = x;
             this.y = y;
         }
     }
-
-
-    //eat()-ուտել
     eat() {
-        //հետազոտում է շրջակայքը, որոնում է սնունդ
-        var fundCords = this.getDirections(2);
+        var fundCords = this.chooseCell(2);
         var cord = random(fundCords);
         if (cord) {
             var x = cord[0];
@@ -249,59 +191,37 @@ class Gishatich {
                 this.mul()
                 this.multiply = 0;
             }
-
-
         } else {
-            //եթե չկա հարմար սնունդ 
             this.move();
             this.energy--;
-            if (this.energy <= 0) { //մահանում է, եթե էներգիան 3֊ից ցածր է
+            if (this.energy <= 0) { 
                 this.die();
             }
         }
     }
-
-    //mul() բազմանալ
     mul() {
-        //փնտրում է դատարկ տարածք
-        var fundCords = this.getDirections(0);
-        var cord = random(fundCords);
-
-        //եթե կա բազմանում է
-        if (cord) {
-            var x = cord[0];
-            var y = cord[1];
-            // this.multiply++;
-            //ստեղծում է նոր օբյեկտ (այստեղ խոտակեր) 
-            //և տեղադրում է այն խոտակերների զանգվածի մեջ
-            var norGishatich = new Gishatich(x, y);
-            gishatichArr.push(norGishatich);
-
-            //հիմնական matrix-ում կատարում է գրառում նոր խոտի մասին
-            matrix[y][x] = 3;
-            // this.multiply = 0; //????????
+        this.multiply++;
+        var newCell = random(this.chooseCell(0));
+        if (this.multiply >= 8 && newCell) {
+            var newGish = new Gishatich(newCell[0], newCell[1], this.index);
+            gishatichArr.push(newGish);
+            matrix[newCell[1]][newCell[0]] = 3;
+            this.multiply = 0;
         }
     }
-
-    //die() մահանալ
     die() {
-        //Հիմնական մատրիցում իր դիրքում դնում է դատարկություն
         matrix[this.y][this.x] = 0;
 
-        //!!! ԿԱՐԵՎՈՐ !!! ջնջում է ինքն իրեն խոտակերների զանգվածից
         for (var i in gishatichArr) {
             if (this.x == gishatichArr[i].x && this.y == gishatichArr[i].y) {
                 gishatichArr.splice(i, 1);
             }
         }
     }
-
 }
-
-class Taguhi {
-    constructor(x, y) {
-        this.x = x;
-        this.y = y;
+class Taguhi extends LivingCreature {
+    constructor(x, y, index) {
+        super(x, y, index);
         this.energy = 30;
         this.directions = [];
         for (var l = 0; l < matrix.length; l++) {
@@ -313,43 +233,30 @@ class Taguhi {
             this.directions.push(zangvac);
         }
     }
-    newDirections() {
+    getNewCoordinates() {
         this.directions;
     }
-    getDirections(t) {
-        this.newDirections();
-        var found = [];
-        for (var i in this.directions) {
-            var x = this.directions[i][0];
-            var y = this.directions[i][1];
-            if (x >= 0 && x < matrix[0].length && y >= 0 && y < matrix.length) {
-                if (matrix[y][x] == t) {
-                    found.push(this.directions[i]);
-                }
-            }
-        }
-        return found;
+    chooseCell(character) {
+        this.getNewCoordinates();
+        return super.chooseCell(character);
     }
-
     move() {
-        var fundCords = this.getDirections(0);
+        var fundCords = this.chooseCell(0);
         var cord = random(fundCords);
 
         if (cord) {
             var x = cord[0];
             var y = cord[1];
 
-            //կատարում է տեղափոխություն հիմնական matrix-ում 
             matrix[y][x] = 4;
             matrix[this.y][this.x] = 0;
 
-            //թարմացնում է սեփական կորդինատները
             this.x = x;
             this.y = y;
         }
     }
     eat() {
-        var fundCords = this.getDirections(2);
+        var fundCords = this.chooseCell(2);
         var cord = random(fundCords);
         if (cord) {
             var x = cord[0];
@@ -364,56 +271,38 @@ class Taguhi {
                     eatArr.splice(i, 1);
                 }
             }
-
-
         } else {
-            //հետազոտում է շրջակայքը, որոնում է սնունդ
-            var fundCords = this.getDirections(1);
+            var fundCords = this.chooseCell(1);
             var cord = random(fundCords);
 
-            //եթե կա հարմար սնունդ
             if (cord) {
                 var x = cord[0];
                 var y = cord[1];
 
-                //հիմնական մատրիցայում տեղափոխվում է կերած սննդի տեղը
-                //իր հին տեղը դնում է դատարկ վանդակ
-                matrix[y][x] = 4;
+                matrix[y][x] = this.index;
                 matrix[this.y][this.x] = 0;
 
-                //փոխում է սեփական կորդինատները օբյեկտի մեջ
                 this.x = x;
                 this.y = y;
 
-                //մեծացնում է էներգիան
                 this.energy++;
 
-                //!!! ԿԱՐԵՎՈՐ !!! սննդի զանգվածից ջնջում է կերված սնունդը
-                //խոտակերի համար դա խոտն է, խոտերի զանգվածի մեջ xotArr
-                for (var i in xotArr) {
-                    if (x == xotArr[i].x && y == xotArr[i].y) {
-                        xotArr.splice(i, 1);
+                for (var i in grassArr) {
+                    if (x == grassArr[i].x && y == grassArr[i].y) {
+                        grassArr.splice(i, 1);
                     }
                 }
-
-                //եթե պատրաստ է բազմացմանը, բազմանում է 
-
-
-            } else {
-                //եթե չկա հարմար սնունդ 
+            } else { 
                 this.move();
                 this.energy--;
-                if (this.energy <= 0) { //մահանում է, եթե էներգիան 3֊ից ցածր է
+                if (this.energy <= 0) {
                     this.die();
                 }
             }
         }
     }
     die() {
-        //Հիմնական մատրիցում իր դիրքում դնում է դատարկություն
         matrix[this.y][this.x] = 0;
-
-        //!!! ԿԱՐԵՎՈՐ !!! ջնջում է ինքն իրեն խոտակերների զանգվածից
         for (var i in taguhiArr) {
             if (this.x == taguhiArr[i].x && this.y == taguhiArr[i].y) {
                 taguhiArr.splice(i, 1);
@@ -421,13 +310,11 @@ class Taguhi {
         }
     }
 }
-class Mat {
-    constructor(x, y) {
-        this.x = x;
-        this.y = y;
+class Mat extends LivingCreature{
+    constructor(x, y, index) {
+        super(x, y, index);
         this.energy = 30;
         this.directions = [];
-        this.multiply = 0;
         for (var k = 0; k < matrix.length; k++) {
             if ((x + k) <= matrix[k].length && (y + k) <= matrix.length) {
                 var zangvac1 = [];
@@ -446,51 +333,30 @@ class Mat {
         }
         console.log(this.directions);
     }
-    newDirections() {
+    getNewCoordinates() {
         this.directions;
     }
-    getDirections(t) {
-        this.newDirections();
-        var found = [];
-        for (var i in this.directions) {
-            var x = this.directions[i][0];
-            var y = this.directions[i][1];
-            if (x >= 0 && x < matrix[0].length && y >= 0 && y < matrix.length) {
-                if (matrix[y][x] == t) {
-                    found.push(this.directions[i]);
-                }
-            }
-        }
-        return found;
+    chooseCell(character) {
+        this.getNewCoordinates();
+        return super.chooseCell(character);
     }
-
-
-
-    //move() շարժվել
     move() {
-        //որոնում է դատարկ տարածքներ
-        var fundCords = this.getDirections(0);
+        var fundCords = this.chooseCell(0);
         var cord = random(fundCords);
 
         if (cord) {
             var x = cord[0];
             var y = cord[1];
 
-            //կատարում է տեղափոխություն հիմնական matrix-ում 
             matrix[y][x] = 5;
             matrix[this.y][this.x] = 0;
 
-            //թարմացնում է սեփական կորդինատները
             this.x = x;
             this.y = y;
         }
     }
-
-
-    //eat()-ուտել
     eat() {
-        //հետազոտում է շրջակայքը, որոնում է սնունդ
-        var fundCords = this.getDirections(3);
+        var fundCords = this.chooseCell(3);
         var cord = random(fundCords);
         if (cord) {
             var x = cord[0];
@@ -510,46 +376,26 @@ class Mat {
                 this.mul()
                 this.multiply = 0;
             }
-
-
         } else {
-            //եթե չկա հարմար սնունդ 
             this.move();
             this.energy--;
-            if (this.energy <= 0) { //մահանում է, եթե էներգիան 3֊ից ցածր է
+            if (this.energy <= 0) { 
                 this.die();
             }
         }
     }
-
-    //mul() բազմանալ
     mul() {
-        //փնտրում է դատարկ տարածք
-        var fundCords = this.getDirections(0);
-        var cord = random(fundCords);
-
-        //եթե կա բազմանում է
-        if (cord) {
-            var x = cord[0];
-            var y = cord[1];
-            // this.multiply++;
-            //ստեղծում է նոր օբյեկտ (այստեղ խոտակեր) 
-            //և տեղադրում է այն խոտակերների զանգվածի մեջ
-            var norMat = new Mat(x, y);
-            matArr.push(norMat);
-
-            //հիմնական matrix-ում կատարում է գրառում նոր խոտի մասին
-            matrix[y][x] = 5;
-            // this.multiply = 0; //????????
+        this.multiply++;
+        var newCell = random(this.chooseCell(0));
+        if (this.multiply >= 8 && newCell) {
+            var newMat = new Mat(newCell[0], newCell[1], this.index);
+            matArr.push(newMat);
+            matrix[newCell[1]][newCell[0]] = 5;
+            this.multiply = 0;
         }
     }
-
-    //die() մահանալ
     die() {
-        //Հիմնական մատրիցում իր դիրքում դնում է դատարկություն
         matrix[this.y][this.x] = 0;
-
-        //!!! ԿԱՐԵՎՈՐ !!! ջնջում է ինքն իրեն խոտակերների զանգվածից
         for (var i in matArr) {
             if (this.x == matArr[i].x && this.y == matArr[i].y) {
                 matArr.splice(i, 1);
